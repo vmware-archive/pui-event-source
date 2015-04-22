@@ -11,7 +11,9 @@
     "url": "https://github.com/pivotal-cf/pui-event-source.git"
   },
   "keywords": [
-    "cursor"
+    "EventSource",
+    "SSE",
+    "pui"
   ],
   "author": "Pivotal, Inc",
   "license": "MIT",
