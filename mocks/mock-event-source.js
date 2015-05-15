@@ -11,6 +11,8 @@ class MockEventSource {
 
   get url() { return privates.get(this).url; }
 
+  get options() { return privates.get(this).options; }
+
   close() {}
 
   trigger(eventName, data) {
