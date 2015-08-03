@@ -31,8 +31,8 @@ class PuiEventSource {
   on(eventName, cb) {
     var {eventSource, callbacks, json} = privates.get(this);
     callbacks[eventName] = callbacks[eventName] || new Map();
-    function wrapped(event) {
-      cb.call(this, json ? JSON.parse(event.data) : event);
+    function wrapped(event = {}) {
+      cb.call(this, json && event.data ? JSON.parse(event.data) : event);
     }
 
     callbacks[eventName].set(cb, wrapped);

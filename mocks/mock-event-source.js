@@ -22,6 +22,13 @@ class MockEventSource {
     });
   }
 
+  triggerRaw(eventName, event) {
+    var {callbacks} = privates.get(this);
+    callbacks[eventName] && callbacks[eventName].forEach(function(cb) {
+      cb(event);
+    });
+  }
+
   addEventListener(eventName, callback) {
     var {callbacks} = privates.get(this);
     callbacks[eventName] = callbacks[eventName] || new Set();
@@ -43,8 +50,11 @@ class MockEventSource {
   }
 
   static uninstall() {
-    global.EventSource = oldEventSource;
-    oldEventSource = null;
+    if(oldEventSource) {
+      global.EventSource = oldEventSource;
+      oldEventSource = null;
+    }
+
     instances = [];
   }
 

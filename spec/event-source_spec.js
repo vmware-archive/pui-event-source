@@ -18,13 +18,23 @@ describe('EventSource', function() {
   });
 
   describe('when the json option is true', function() {
-    it('parses the event as json', function() {
+    beforeEach(function() {
       subject.close();
       subject = new EventSource(URL, {json: true});
+    });
+
+    it('parses the event as json', function() {
       var onSpy = jasmine.createSpy('on');
       subject.on('eventName', onSpy);
       MockEventSource.mostRecent().trigger('eventName', '{"one": "two"}');
       expect(onSpy).toHaveBeenCalledWith({one: 'two'});
+    });
+
+    it('does not throw if there is no data', function() {
+      var errorSpy = jasmine.createSpy('error');
+      subject.on('error', errorSpy);
+      MockEventSource.mostRecent().triggerRaw('error', {target: 'foo'});
+      expect(errorSpy).toHaveBeenCalledWith({target: 'foo'});
     });
   });
 
