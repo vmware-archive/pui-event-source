@@ -1,4 +1,4 @@
-require('babel/polyfill');
+require('babel-polyfill');
 var MockEventSource = require('../mocks/mock-event-source');
 var MockPromises = require('mock-promises');
 

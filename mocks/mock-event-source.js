@@ -15,10 +15,10 @@ class MockEventSource {
 
   close() {}
 
-  trigger(eventName, data) {
+  trigger(eventName, data, options) {
     var {callbacks} = privates.get(this);
     callbacks[eventName] && callbacks[eventName].forEach(function(cb) {
-      cb({data: typeof data === 'object' ? JSON.stringify(data) : data});
+      cb({...options, data: typeof data === 'object' ? JSON.stringify(data) : data});
     });
   }
 

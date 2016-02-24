@@ -9,6 +9,12 @@
     "modules": true
   },
 
+  "parser": "babel-eslint",
+
+  "plugins": [
+    "jasmine"
+  ],
+
   "rules": {
     "camelcase": 0,
     "curly": 0,

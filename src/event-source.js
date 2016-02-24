@@ -1,6 +1,7 @@
 var privates = new WeakMap();
 
 function getCredentials(url) {
+  if (typeof url !== 'string') return {url};
   /*eslint-disable no-unused-vars*/
   var [_, prefix, user, password, suffix] = url.match(/(^.+?\/\/)(.+?):(.+?)@(.+$)/) || [];
   /*eslint-enable no-unused-vars*/
@@ -32,7 +33,7 @@ class PuiEventSource {
     var {eventSource, callbacks, json} = privates.get(this);
     callbacks[eventName] = callbacks[eventName] || new Map();
     function wrapped(event = {}) {
-      cb.call(this, json && event.data ? JSON.parse(event.data) : event);
+      cb.call(this, json && event.data ? JSON.parse(event.data) : event, event.lastEventId);
     }
 
     callbacks[eventName].set(cb, wrapped);

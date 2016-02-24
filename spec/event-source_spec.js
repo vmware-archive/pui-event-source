@@ -18,23 +18,47 @@ describe('EventSource', function() {
   });
 
   describe('when the json option is true', function() {
-    beforeEach(function() {
-      subject.close();
-      subject = new EventSource(URL, {json: true});
+    describe('when no id is emitted', () => {
+      beforeEach(function() {
+        subject.close();
+        subject = new EventSource(URL, {json: true});
+      });
+
+      it('parses the event as json', function() {
+        var onSpy = jasmine.createSpy('on');
+        subject.on('eventName', onSpy);
+        MockEventSource.mostRecent().trigger('eventName', '{"one": "two"}');
+        expect(onSpy).toHaveBeenCalledWith({one: 'two'}, undefined);
+      });
+
+      it('does not throw if there is no data', function() {
+        var errorSpy = jasmine.createSpy('error');
+        subject.on('error', errorSpy);
+        MockEventSource.mostRecent().triggerRaw('error', {target: 'foo'});
+        expect(errorSpy).toHaveBeenCalledWith({target: 'foo'}, undefined);
+      });
     });
 
-    it('parses the event as json', function() {
-      var onSpy = jasmine.createSpy('on');
-      subject.on('eventName', onSpy);
-      MockEventSource.mostRecent().trigger('eventName', '{"one": "two"}');
-      expect(onSpy).toHaveBeenCalledWith({one: 'two'});
-    });
+    describe('when an id is emitted', () => {
+      beforeEach(function() {
+        subject.close();
+        subject = new EventSource(URL, {json: true});
+      });
 
-    it('does not throw if there is no data', function() {
-      var errorSpy = jasmine.createSpy('error');
-      subject.on('error', errorSpy);
-      MockEventSource.mostRecent().triggerRaw('error', {target: 'foo'});
-      expect(errorSpy).toHaveBeenCalledWith({target: 'foo'});
+      it('parses the event as json and the id', function() {
+        var onSpy = jasmine.createSpy('on');
+        subject.on('eventName', onSpy);
+        const id = 'some id';
+        MockEventSource.mostRecent().trigger('eventName', '{"one": "two"}', {lastEventId: id});
+        expect(onSpy).toHaveBeenCalledWith({one: 'two'}, id);
+      });
+
+      it('does not throw if there is no data', function() {
+        var errorSpy = jasmine.createSpy('error');
+        subject.on('error', errorSpy);
+        MockEventSource.mostRecent().triggerRaw('error', {target: 'foo'});
+        expect(errorSpy).toHaveBeenCalledWith({target: 'foo'}, undefined);
+      });
     });
   });
 
@@ -46,7 +70,7 @@ describe('EventSource', function() {
     });
     it('listens for the appropriately named message', function() {
       MockEventSource.mostRecent().trigger('eventName', 'data');
-      expect(onSpy).toHaveBeenCalledWith(jasmine.objectContaining({data: 'data'}));
+      expect(onSpy).toHaveBeenCalledWith(jasmine.objectContaining({data: 'data'}), undefined);
     });
 
     it('ignores other messages', function() {
