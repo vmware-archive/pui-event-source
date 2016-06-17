@@ -61,6 +61,10 @@ class MockEventSource {
   static mostRecent() {
     return instances[0];
   }
+
+  static all() {
+    return instances;
+  }
 }
 
 module.exports = MockEventSource;

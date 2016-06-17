@@ -3,6 +3,7 @@ require('./spec_helper');
 describe('EventSource', function() {
   const URL = 'http://user:password@foo.com';
   var EventSource, subject;
+
   beforeEach(function() {
     EventSource = require('../src/event-source');
     subject = new EventSource(URL, {json: false});
@@ -15,6 +16,28 @@ describe('EventSource', function() {
 
   it('calls the event source without the username and password in the url (firefox)', function() {
     expect(MockEventSource.mostRecent().url).toEqual('http://foo.com');
+  });
+
+  describe('#all', function() {
+    const URL2 = 'http://omfgdogs.com';
+    let eventSource2;
+
+    beforeEach(function() {
+      eventSource2 = new EventSource(URL2, {json: false});
+    });
+
+    afterEach(function() {
+      eventSource2.close();
+      eventSource2.off();
+    });
+
+    it('returns all the event sources', () => {
+      const urls = ['http://omfgdogs.com', 'http://foo.com'];
+
+      MockEventSource.all().forEach(function(eventSource, i) {
+        expect(eventSource.url).toEqual(urls[i]);
+      })
+    });
   });
 
   describe('when the json option is true', function() {
