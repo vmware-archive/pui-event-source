@@ -1,6 +1,6 @@
 {
   "name": "pui-event-source",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Facade for EventSource for subscribing to named events",
   "main": "event-source.js",
   "scripts": {
