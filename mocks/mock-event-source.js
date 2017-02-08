@@ -1,9 +1,13 @@
-var oldEventSource;
-var instances = [];
+const {EventEmitter} = require('events');
 
-var privates = new WeakMap();
-class MockEventSource {
+let oldEventSource, instances = [];
+
+const privates = new WeakMap();
+const listeners = new WeakMap();
+
+class MockEventSource extends EventEmitter {
   constructor(url, options = {}) {
+    super();
     privates.set(this, {url, callbacks: {}, options});
     this.close = jasmine.createSpy('close');
     instances.unshift(this);
@@ -15,30 +19,18 @@ class MockEventSource {
 
   close() {}
 
-  trigger(eventName, data, options) {
-    var {callbacks} = privates.get(this);
-    callbacks[eventName] && callbacks[eventName].forEach(function(cb) {
-      cb({...options, data: typeof data === 'object' ? JSON.stringify(data) : data});
-    });
+  addEventListener(eventName, listener) {
+    const callback = listener && function(data, lastEventId) {
+      listener.call(this, {data, lastEventId});
+    };
+    listeners.set(listener, callback);
+    super.addListener(eventName, callback);
   }
 
-  triggerRaw(eventName, event) {
-    var {callbacks} = privates.get(this);
-    callbacks[eventName] && callbacks[eventName].forEach(function(cb) {
-      cb(event);
-    });
-  }
-
-  addEventListener(eventName, callback) {
-    var {callbacks} = privates.get(this);
-    callbacks[eventName] = callbacks[eventName] || new Set();
-    callbacks[eventName].add(callback);
-  }
-
-  removeEventListener(eventName, callback) {
-    var {callbacks} = privates.get(this);
-    callbacks[eventName] = callbacks[eventName] || new Set();
-    callbacks[eventName].delete(callback);
+  removeEventListener(eventName, listener) {
+    const callback = listeners.get(listener);
+    if (eventName) return super.removeAllListeners(eventName, callback);
+    return super.removeAllListeners();
   }
 
   static install() {

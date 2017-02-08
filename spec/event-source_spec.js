@@ -11,7 +11,7 @@ describe('EventSource', function() {
 
   afterEach(function() {
     subject.close();
-    subject.off();
+    subject.removeAllListeners();
   });
 
   it('calls the event source without the username and password in the url (firefox)', function() {
@@ -28,7 +28,7 @@ describe('EventSource', function() {
 
     afterEach(function() {
       eventSource2.close();
-      eventSource2.off();
+      eventSource2.removeAllListeners();
     });
 
     it('returns all the event sources', () => {
@@ -50,14 +50,14 @@ describe('EventSource', function() {
       it('parses the event as json', function() {
         var onSpy = jasmine.createSpy('on');
         subject.on('eventName', onSpy);
-        MockEventSource.mostRecent().trigger('eventName', '{"one": "two"}');
+        MockEventSource.mostRecent().emit('eventName', '{"one": "two"}', undefined);
         expect(onSpy).toHaveBeenCalledWith({one: 'two'}, undefined);
       });
 
       it('does not throw if there is no data', function() {
         var errorSpy = jasmine.createSpy('error');
         subject.on('error', errorSpy);
-        MockEventSource.mostRecent().triggerRaw('error', {target: 'foo'});
+        MockEventSource.mostRecent().emit('error', {target: 'foo'}, undefined);
         expect(errorSpy).toHaveBeenCalledWith({target: 'foo'}, undefined);
       });
     });
@@ -72,14 +72,14 @@ describe('EventSource', function() {
         var onSpy = jasmine.createSpy('on');
         subject.on('eventName', onSpy);
         const id = 'some id';
-        MockEventSource.mostRecent().trigger('eventName', '{"one": "two"}', {lastEventId: id});
+        MockEventSource.mostRecent().emit('eventName', '{"one": "two"}', id);
         expect(onSpy).toHaveBeenCalledWith({one: 'two'}, id);
       });
 
       it('does not throw if there is no data', function() {
         var errorSpy = jasmine.createSpy('error');
         subject.on('error', errorSpy);
-        MockEventSource.mostRecent().triggerRaw('error', {target: 'foo'});
+        MockEventSource.mostRecent().emit('error', {target: 'foo'});
         expect(errorSpy).toHaveBeenCalledWith({target: 'foo'}, undefined);
       });
     });
@@ -91,50 +91,54 @@ describe('EventSource', function() {
       onSpy = jasmine.createSpy('on');
       subject.on('eventName', onSpy);
     });
+
     it('listens for the appropriately named message', function() {
-      MockEventSource.mostRecent().trigger('eventName', 'data');
-      expect(onSpy).toHaveBeenCalledWith(jasmine.objectContaining({data: 'data'}), undefined);
+      MockEventSource.mostRecent().emit('eventName', 'data');
+      expect(onSpy).toHaveBeenCalledWith('data', undefined);
     });
 
     it('ignores other messages', function() {
-      MockEventSource.mostRecent().trigger('notMyEventName', 'data');
+      MockEventSource.mostRecent().emit('notMyEventName', 'data');
       expect(onSpy).not.toHaveBeenCalled();
     });
   });
 
-  describe('#off', function() {
+  describe('#removeAllListeners', function() {
     var onSpy;
     beforeEach(function() {
       onSpy = jasmine.createSpy('on');
       subject.on('eventName', onSpy);
     });
 
-    it('does not turn off events for other names', function() {
-      subject.off('notMyEventName', onSpy);
-      MockEventSource.mostRecent().trigger('eventName', 'data');
+    it('does not turn removeAllListeners events for other names', function() {
+      subject.removeAllListeners('notMyEventName', onSpy);
+      MockEventSource.mostRecent().emit('eventName', 'data');
       expect(onSpy).toHaveBeenCalled();
     });
 
     describe('when it has a callback', function() {
-      it('turns off events for that name and callback', function() {
-        subject.off('eventName', onSpy);
-        MockEventSource.mostRecent().trigger('eventName', 'data');
+      it('turns removeAllListeners events for that name and callback', function() {
+        const mockEventSource = MockEventSource.mostRecent();
+        spyOn(mockEventSource, 'removeEventListener').and.callThrough();
+        subject.removeAllListeners('eventName', onSpy);
+        expect(mockEventSource.removeEventListener).toHaveBeenCalledWith('eventName', onSpy);
+        mockEventSource.emit('eventName', 'data');
         expect(onSpy).not.toHaveBeenCalled();
       });
     });
 
     describe('when it has no callback', function() {
-      it('turns off all events for that name', function() {
-        subject.off('eventName');
-        MockEventSource.mostRecent().trigger('eventName', 'data');
+      it('turns removeAllListeners all events for that name', function() {
+        subject.removeAllListeners('eventName');
+        MockEventSource.mostRecent().emit('eventName', 'data');
         expect(onSpy).not.toHaveBeenCalled();
       });
     });
 
     describe('when it has no event name or callback', function() {
-      it('turns off all events', function() {
-        subject.off();
-        MockEventSource.mostRecent().trigger('eventName', 'data');
+      it('turns removeAllListeners all events', function() {
+        subject.removeAllListeners();
+        MockEventSource.mostRecent().emit('eventName', 'data');
         expect(onSpy).not.toHaveBeenCalled();
       });
     });
@@ -153,7 +157,7 @@ describe('EventSource', function() {
       it('resolves the promise', function() {
         var doneSpy = jasmine.createSpy('done');
         subject.connected().then(doneSpy);
-        MockEventSource.mostRecent().trigger('open');
+        MockEventSource.mostRecent().emit('open');
         MockPromises.executeForResolvedPromises();
         MockPromises.executeForResolvedPromises();
         expect(doneSpy).toHaveBeenCalled();

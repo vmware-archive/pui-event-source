@@ -1,8 +1,8 @@
 require('babel-polyfill');
-var MockEventSource = require('../mocks/mock-event-source');
-var MockPromises = require('mock-promises');
+const MockEventSource = require('../mocks/mock-event-source');
+const MockPromises = require('mock-promises');
 
-var oldPromise = Promise;
+const oldPromise = Promise;
 Object.assign(global, {
   Promise: MockPromises.getMockPromise(Promise),
   EventSource() {},
